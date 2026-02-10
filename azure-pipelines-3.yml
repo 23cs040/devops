@@ -1,0 +1,63 @@
+trigger:
+- main
+
+pool:
+  name: 'my-machine'  # Using your self-hosted agent pool
+
+variables:
+  # Set Java home for the pipeline
+  JAVA_HOME: 'C:\Program Files\Java\jdk-25'
+  
+steps:
+# Step 1: Debug environment (optional - remove after it works)
+- script: |
+    echo "Current PATH: %PATH%"
+    echo "JAVA_HOME: %JAVA_HOME%"
+    echo "Computer Name: %COMPUTERNAME%"
+  displayName: 'Debug Environment'
+
+# Step 2: Check if Maven is accessible
+- script: |
+    echo "Testing Maven access..."
+    where mvnd || echo "mvnd not found in PATH"
+    where mvn || echo "mvn not found in PATH"
+    dir "C:\maven" || echo "Maven directory not found"
+  displayName: 'Check Maven Availability'
+  continueOnError: true
+
+# Step 3: Test with full path
+- script: |
+    echo "Testing with full Maven path..."
+    "C:\maven\maven-mvnd-1.0.3-windows-amd64\bin\mvnd.cmd" --version
+  displayName: 'Test Maven Installation'
+
+# Step 4: Build with Maven (using full path to avoid PATH issues)
+- script: |
+    echo "Starting Maven build..."
+    
+    # Method 1: Using full path (most reliable)
+    "C:\maven\maven-mvnd-1.0.3-windows-amd64\bin\mvnd.cmd" clean compile
+    
+    # If Method 1 fails, uncomment Method 2 below
+    # echo "Method 1 failed, trying Method 2..."
+    # set PATH=%PATH%;C:\maven\maven-mvnd-1.0.3-windows-amd64\bin
+    # set JAVA_HOME=C:\Program Files\Java\jdk-25
+    # mvnd clean compile
+  displayName: 'Build with Maven Daemon'
+
+# Step 5: Optional - Verify build output
+- script: |
+    echo "Checking build results..."
+    if exist target ( 
+      echo "Build directory exists"
+      dir target
+    ) else (
+      echo "No target directory found"
+    )
+  displayName: 'Verify Build Output'
+  condition: succeeded()
+
+# Step 6: Final status
+- script: echo "Build completed successfully on $(ComputerName) at $(date)"
+  displayName: 'Build Status'
+  condition: succeeded()
