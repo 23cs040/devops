@@ -1,0 +1,14 @@
+trigger:
+- main   # Runs pipeline when code is pushed to main branch
+
+pool:
+  vmImage: 'ubuntu-latest'   # Uses a Microsoft-hosted agent
+
+steps:
+- script: echo "Hello, Azure Pipeline!"
+  displayName: 'Run a simple script'
+
+- script: |
+    echo "Building the project..."
+    echo "Build completed!"
+  displayName: 'Build Step'
